@@ -5,3 +5,7 @@ nodes=clnode123.clemson.cloudlab.us,clnode121.clemson.cloudlab.us,apt156.apt.emu
 pass=ibm@hero
 key=.ssh/id_rsa
 nic=vlan*
+
+[CONTROLLER]
+ip=130.127.39.241
+port=8090
