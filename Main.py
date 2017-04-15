@@ -4,6 +4,7 @@ import ConfigParser as cp
 import time
 from SshHelper.SshHelper import run_command, get_cpu_usage, get_net_usage, get_hostname
 from ControllerStats.SwitchStats import SwitchStats
+from ControllerStats.SwitchBandwidthStats import SwitchBandwidthStats
 
 # Read the agents/servers/clients list from config file
 config_file = "config"
@@ -18,8 +19,11 @@ nic = parser.get('NODES', 'nic')
 controller_ip = parser.get('CONTROLLER', 'ip')
 controller_port = parser.get('CONTROLLER', 'port')
 
-switchStats = SwitchStats(controller_ip, controller_port)
-print (switchStats.get(None))
+#switchStats = SwitchStats(controller_ip, controller_port)
+#print (switchStats.get(None))
+
+switchBandwidthStats = SwitchBandwidthStats(controller_ip, controller_port)
+print (switchBandwidthStats.get(None, '00:00:7a:b1:ab:71:38:4a', '1'))
 
 #Get the switch stats
 # Now we will do SSH into each node and get the stats. 

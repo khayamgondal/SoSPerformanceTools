@@ -1,21 +1,26 @@
 import httplib
 import json
-from RestCore import RestCore
-
-class SwitchBandwidthStats(RestCore):
+  
+class RestCore(object):
   
     def __init__(self, server, port):
-        super(SwitchBandwidthStats, self).__init__(server, port)
-	#self.dpid = dpid
-	#self.s_port = s_port
-
-    def get(self, data, dpid, s_port):
-        ret = self.rest_call({}, dpid, s_port, 'GET')
+        self.server = server
+        self.port = port
+  
+    def get(self, data):
+        ret = self.rest_call({}, 'GET')
         return json.loads(ret[2])
-
-    def rest_call(self, data, dpid, s_port, action):
-        path = 'wm/statistics/bandwidth/'+dpid+'/'+s_port+'/json' #next use %
-	print path
+  
+    def set(self, data):
+        ret = self.rest_call(data, 'POST')
+        return ret[0] == 200
+  
+    def remove(self, objtype, data):
+        ret = self.rest_call(data, 'DELETE')
+        return ret[0] == 200
+  
+    def rest_call(self, data, action): #get the list of all the switches
+        path = '/wm/core/controller/summary/json'
         headers = {
             'Content-type': 'application/json',
             'Accept': 'application/json',
@@ -25,6 +30,7 @@ class SwitchBandwidthStats(RestCore):
         conn.request(action, path, body, headers)
         response = conn.getresponse()
         ret = (response.status, response.reason, response.read())
+        #print ret
         conn.close()
         return ret
   
