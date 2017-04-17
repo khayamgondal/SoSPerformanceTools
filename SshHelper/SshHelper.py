@@ -20,7 +20,7 @@ def get_cpu_usage(literal):
     parts = literal[0].split() # 8th part is actual CPU usage
     return parts[8]
   except IndexError:
-    return -1
+    return 0
 def get_net_usage(literals):
   return literals[0].strip()
    
