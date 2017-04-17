@@ -15,7 +15,6 @@ class SwitchBandwidthStats(RestCore):
 
     def rest_call(self, data, dpid, s_port, action):
         path = 'wm/statistics/bandwidth/'+dpid+'/'+s_port+'/json' #next use %
-	print path
         headers = {
             'Content-type': 'application/json',
             'Accept': 'application/json',
