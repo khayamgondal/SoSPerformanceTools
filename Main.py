@@ -7,6 +7,8 @@ from ControllerStats.SwitchStats import SwitchStats
 from ControllerStats.SwitchBandwidthStats import SwitchBandwidthStats
 from Utils import StatsList, SwitchStatList
 import signal, sys
+import threading
+from time import gmtime, strftime
 
 # Read the agents/servers/clients list from config file
 config_file = "config"
@@ -25,41 +27,61 @@ def signal_handler(signal, frame):
   sys.exit(0)
 #signal.signal(signal.SIGINT, signal_handler)
 
-
-  #print (switch_bw[0]['bits-per-second-rx'])
-  #print (switch_bw[0]['bits-per-second-tx'])
 print "Writing outputs into files. Press Crtl + C to cancel "
-# Now we will do SSH into each node and get the stats. 
-while (1):
-  #print time.time()
-  stats_list = []
-  for node in nodes:
-    status, hostname = run_command(user, node, "hostname")
-    status, cpu = run_command(user, node, "top -bn 1 | grep agent")
-    #status, network = run_command(user, node, "netstat -tnp | grep agent")
-    #status, network_recv = run_command(user, node, "cat /sys/class/net/" +nic+
-    #"/statistics/rx_bytes")
-    #status, network_send = run_command(user, node, "cat /sys/class/net/" +nic+
-    #"/statistics/tx_bytes")
-  
-    cpu = get_cpu_usage(cpu)
-    #recv = get_net_usage(network_recv)
-    #send = get_net_usage(network_send)
-    hostname = get_hostname(hostname)
-    #stats_list.append(StatsList(hostname, cpu))
-    file_handler = open('Output/'+hostname, 'a+')
-    file_handler.write(str(time.time()) + ',' + hostname + ',' + str(cpu) + '\n')
-    #print hostname, cpu
-    file_handler.close();
-    
-    #Get the controller stats
-    switchStats = SwitchStats(controller_ip, controller_port).get(None)
-    switchBandwidthStats = SwitchBandwidthStats(controller_ip, controller_port)
 
-    for i in xrange(len(switchStats)):
-      switch_bw = switchBandwidthStats.get(None, switchStats[i]['switchDPID'], '1')
-      #print switch_bw[0]['dpid']
-      file_handler = open('Output/' + switch_bw[0]['dpid'], 'a+')
-      file_handler.write(str(time.time()) + ',' + switch_bw[0]['dpid'] + ',' +
-      switch_bw[0]['bits-per-second-rx'] + ',' + switch_bw[0]['bits-per-second-tx'] + '\n')
-      file_handler.close();
+def worker_cpu(node, hostname):
+  while(1):
+    file_handler = open('/var/www/html/sos/'+hostname, 'a+')
+    status, cpu = run_command(user, node, "top -bn 1 | grep agent")
+    cpu = get_cpu_usage(cpu)
+    print hostname, cpu
+    file_handler.write(str(strftime("%H:%M:%S", ))  + ',' + str(cpu) + '\n')
+    file_handler.close();
+
+def worker_network(node, hostname):
+  last_recv = 0
+  last_send = 0
+  
+  while(1):
+    file_handler = open('/var/www/html/sos/plots'+hostname+'_net', 'a+')
+    status, network_recv = run_command(user, node, "cat /sys/class/net/" +nic+
+    "/statistics/rx_bytes")
+    status, network_send = run_command(user, node, "cat /sys/class/net/" +nic+
+    "/statistics/tx_bytes")
+    
+    recv = get_net_usage(network_recv)
+    send = get_net_usage(network_send)
+    
+    if last_recv == 0:
+      last_time = time.time()
+      last_recv = recv
+      last_send = send
+      recv = 0
+      send = 0
+    else:
+      recv = (float(recv) - float(last_recv)) / (float (time.time() ) - float(last_time) )
+      recv = recv * 8 /1024 / 1024 / 1024
+      send = (float(send) - float(last_send)) / (float (time.time() ) - float(last_time) )
+      send = send * 8 /1024 / 1024 / 1024
+      
+    print hostname+'_net', recv, send
+    file_handler.write(str(time.time()) + ',' + hostname + ',' + str(recv) +','+ str(send) + '\n')
+    file_handler.close();
+
+
+#MULTITHREADING SUPPORT
+threads = []
+for node in nodes:
+  status, hostname = run_command(user, node, "hostname")
+  hostname = get_hostname(hostname)
+  t = threading.Thread(target=worker_cpu, args=(node, hostname))  
+  t2 = threading.Thread(target=worker_network, args=(node, hostname)) 
+  t.daemon = True
+  t2.daemon = True
+  threads.append(t)
+  threads.append(t2)
+  t.start()
+  #t2.start()
+  
+while(1):
+  time.sleep(1)
