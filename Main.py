@@ -43,7 +43,8 @@ def worker_network(node, hostname):
   last_send = 0
   
   while(1):
-    file_handler = open('/var/www/html/sos/plots'+hostname+'_net', 'a+')
+      
+    file_handler = open('/var/www/html/sos/'+hostname+'_net', 'a+')
     status, network_recv = run_command(user, node, "cat /sys/class/net/" +nic+
     "/statistics/rx_bytes")
     status, network_send = run_command(user, node, "cat /sys/class/net/" +nic+
@@ -63,12 +64,48 @@ def worker_network(node, hostname):
       recv = recv * 8 /1024 / 1024 / 1024
       send = (float(send) - float(last_send)) / (float (time.time() ) - float(last_time) )
       send = send * 8 /1024 / 1024 / 1024
-      
+      if send < 0.005:
+        send = 0
+      if recv < 0.005:
+        recv = 0
     print hostname+'_net', recv, send
-    file_handler.write(str(time.time()) + ',' + hostname + ',' + str(recv) +','+ str(send) + '\n')
+    file_handler.write(str(strftime("%H:%M:%S", )) + ',' + str(recv) +','+ str(send) + '\n')
     file_handler.close();
 
+def worker_con():
 
+  switchStats = SwitchStats(controller_ip, controller_port).get(None)
+  switchBandwidthStats = SwitchBandwidthStats(controller_ip, controller_port)
+  while(1):
+    for i in xrange(len(switchStats)): #Itterate over each switch
+      switch_bw = switchBandwidthStats.get(None, switchStats[i]['switchDPID'], '0')
+      if switch_bw: 
+        for sw in switch_bw:
+          if str(sw['dpid']).startswith('00:00'): # its a virtual switch 
+            if sw['port'] == 'local':
+              file_handler = open('/var/www/html/sos/'+str(sw['dpid']).translate(None, ':!@#$'), 'a+')
+              tx = float(sw['bits-per-second-tx'])/1000000000
+              rx = float(sw['bits-per-second-rx'])/1000000000
+              if tx < 0.05:
+                tx = 0
+              if rx < 0.05:
+                rx = 0
+              print 'Virtual Switches' , tx, rx
+              file_handler.write(str(strftime("%H:%M:%S", )) + ',' + str(tx) +','+ str(rx) + '\n')
+          elif str(sw['dpid']).startswith('00:02:00:01:e8:a7:a7:15'): 
+            if sw['port'] == '21':
+              file_handler = open('/var/www/html/sos/controller', 'a+')
+              tx = float(sw['bits-per-second-tx'])/1000000000
+              rx = float(sw['bits-per-second-rx'])/1000000000
+              print 'Phsyical', tx, rx
+              file_handler.write(str(strftime("%H:%M:%S", )) + ',' + str(tx) +','+ str(rx) + '\n')
+              file_handler.close();
+    time.sleep(0.5)
+
+    #switch_bw = switchBandwidthStats.get(None, '00:02:00:01:e8:a7:a7:15', '21')
+    #for sw in switch_bw:
+
+        
 #MULTITHREADING SUPPORT
 threads = []
 for node in nodes:
@@ -76,12 +113,20 @@ for node in nodes:
   hostname = get_hostname(hostname)
   t = threading.Thread(target=worker_cpu, args=(node, hostname))  
   t2 = threading.Thread(target=worker_network, args=(node, hostname)) 
+  t3 = threading.Thread(target=worker_con, ) 
   t.daemon = True
   t2.daemon = True
+  t3.daemon = True
+  
   threads.append(t)
   threads.append(t2)
+  threads.append(t3)
+  
   t.start()
   #t2.start()
-  
+  t3.start()
+
+      
 while(1):
+  #Get the controller stats
   time.sleep(1)
