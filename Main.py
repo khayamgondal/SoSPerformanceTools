@@ -77,6 +77,7 @@ def worker_con():
   switchStats = SwitchStats(controller_ip, controller_port).get(None)
   switchBandwidthStats = SwitchBandwidthStats(controller_ip, controller_port)
   while(1):
+    totalBW = 0
     for i in xrange(len(switchStats)): #Itterate over each switch
       switch_bw = switchBandwidthStats.get(None, switchStats[i]['switchDPID'], '0')
       if switch_bw: 
@@ -91,15 +92,20 @@ def worker_con():
               if rx < 0.05:
                 rx = 0
               print 'Virtual Switches' , tx, rx
+              totalBW += tx
               file_handler.write(str(strftime("%H:%M:%S", )) + ',' + str(tx) +','+ str(rx) + '\n')
-          elif str(sw['dpid']).startswith('00:02:00:01:e8:a7:a7:15'): 
-            if sw['port'] == '21':
-              file_handler = open('/var/www/html/sos/controller', 'a+')
-              tx = float(sw['bits-per-second-tx'])/1000000000
-              rx = float(sw['bits-per-second-rx'])/1000000000
-              print 'Phsyical', tx, rx
-              file_handler.write(str(strftime("%H:%M:%S", )) + ',' + str(tx) +','+ str(rx) + '\n')
-              file_handler.close();
+          #elif str(sw['dpid']).startswith('00:02:00:01:e8:a7:a7:15'): 
+            #if sw['port'] == '21':
+              #file_handler = open('/var/www/html/sos/controller', 'a+')
+              #tx = float(sw['bits-per-second-tx'])/1000000000
+              #rx = float(sw['bits-per-second-rx'])/1000000000
+              #print 'Phsyical', tx, rx
+              #file_handler.write(str(strftime("%H:%M:%S", )) + ',' + str(tx) +','+ str(rx) + '\n')
+              #file_handler.close();
+      file_handler = open('/var/www/html/sos/controller', 'a+')
+      file_handler.write(str(strftime("%H:%M:%S", )) + ',' + str(totalBW/2) +','+ str(totalBW/2) + '\n')
+      file_handler.close();
+      print 'Total BW ' + str(totalBW/2)
     time.sleep(0.5)
 
     #switch_bw = switchBandwidthStats.get(None, '00:02:00:01:e8:a7:a7:15', '21')

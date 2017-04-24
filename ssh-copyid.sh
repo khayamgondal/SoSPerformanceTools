@@ -1,0 +1,10 @@
+ssh-copy-id khayam@apt156.apt.emulab.net
+ssh-copy-id khayam@apt181.apt.emulab.net
+ssh-copy-id khayam@apt152.apt.emulab.net
+ssh-copy-id khayam@apt159.apt.emulab.net
+ssh-copy-id khayam@apt163.apt.emulab.net
+ssh-copy-id khayam@clnode110.clemson.cloudlab.us
+ssh-copy-id khayam@clnode115.clemson.cloudlab.us
+ssh-copy-id khayam@clnode122.clemson.cloudlab.us
+ssh-copy-id khayam@clnode123.clemson.cloudlab.us
+ssh-copy-id khayam@clnode119.clemson.cloudlab.us
