@@ -34,3 +34,22 @@ class RestCore(object):
         conn.close()
         return ret
   
+class DeviceStat(RestCore):
+
+    def __init__(self, server, port):
+        super(DeviceStat, self).__init__(server, port)
+	
+    def rest_call(self, data, action): #get the list of all the switches
+        path = '/wm/device/'
+        headers = {
+            'Content-type': 'application/json',
+            'Accept': 'application/json',
+            }
+        body = json.dumps(data)
+        conn = httplib.HTTPConnection(self.server, self.port)
+        conn.request(action, path, body, headers)
+        response = conn.getresponse()
+        ret = (response.status, response.reason, response.read())
+        #print ret
+        conn.close()
+        return ret
