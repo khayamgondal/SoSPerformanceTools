@@ -37,21 +37,27 @@ for node in nodes:
   status, hostname = run_command(user, node, "hostname")
   hostname = get_hostname(hostname)
   t = threading.Thread(target=worker_cpu, args=(user, node, hostname))  
-  t2 = threading.Thread(target=worker_network, args=(user, node, hostname)) 
-  t3 = threading.Thread(target=worker_con, args=(controller_ip, controller_port) ) 
+  #t2 = threading.Thread(target=worker_network, args=(user, node, hostname)) 
+  #t3 = threading.Thread(target=worker_con, args=(controller_ip, controller_port) ) 
   t.daemon = True
-  t2.daemon = True
-  t3.daemon = True
+  #t2.daemon = True
+  #t3.daemon = True
   
   threads.append(t)
-  threads.append(t2)
-  threads.append(t3)
+  #threads.append(t2)
+  #threads.append(t3)
   
   t.start()
   #t2.start()
-  t3.start()
-
+  #t3.start()
+  
+t3 = threading.Thread(target=worker_con, args=(controller_ip, controller_port) )
+t3.daemon = True
+threads.append(t3)
+#t3.start()
+worker_con(controller_ip, controller_port)
       
 while(1):
   #Get the controller stats
+
   time.sleep(1)
