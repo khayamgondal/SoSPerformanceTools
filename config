@@ -1,8 +1,8 @@
 [NODES]
-user=khayam
+user=username
 nodes=apt156.apt.emulab.net,apt181.apt.emulab.net,apt152.apt.emulab.net,apt159.apt.emulab.net,apt163.apt.emulab.net,clnode110.clemson.cloudlab.us,clnode115.clemson.cloudlab.us,clnode122.clemson.cloudlab.us,clnode123.clemson.cloudlab.us,clnode119.clemson.cloudlab.us
 
-pass=ibm@hero
+pass=password
 key=.ssh/id_rsa
 nic=vlan*
 
